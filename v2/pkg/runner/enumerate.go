@@ -21,7 +21,7 @@ func (r *Runner) EnumerateSingleDomain(ctx context.Context, domain string, outpu
 
 	// Get the API keys for sources from the configuration
 	// and also create the active resolving engine for the domain.
-	keys := r.options.YAMLConfig.GetKeys()
+	keys := r.options.Providers.GetKeys()
 
 	// Check if the user has asked to remove wildcards explicitly.
 	// If yes, create the resolution pool and get the wildcards for the current domain
@@ -37,7 +37,7 @@ func (r *Runner) EnumerateSingleDomain(ctx context.Context, domain string, outpu
 
 	// Run the passive subdomain enumeration
 	now := time.Now()
-	passiveResults := r.passiveAgent.EnumerateSubdomains(domain, &keys, r.options.Proxy, r.options.RateLimit, r.options.Timeout, time.Duration(r.options.MaxEnumerationTime)*time.Minute, r.options.LocalIP)
+	passiveResults := r.passiveAgent.EnumerateSubdomains(domain, &keys, r.options.Proxy, r.options.RateLimit, r.options.Timeout, time.Duration(r.options.MaxEnumerationTime)*time.Minute)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
@@ -119,15 +119,15 @@ func (r *Runner) EnumerateSingleDomain(ctx context.Context, domain string, outpu
 	var err error
 	for _, w := range outputs {
 		if r.options.HostIP {
-			err = outputter.WriteHostIP(foundResults, w)
+			err = outputter.WriteHostIP(domain, foundResults, w)
 		} else {
 			if r.options.RemoveWildcard {
-				err = outputter.WriteHostNoWildcard(foundResults, w)
+				err = outputter.WriteHostNoWildcard(domain, foundResults, w)
 			} else {
 				if r.options.CaptureSources {
-					err = outputter.WriteSourceHost(sourceMap, w)
+					err = outputter.WriteSourceHost(domain, sourceMap, w)
 				} else {
-					err = outputter.WriteHost(uniqueMap, w)
+					err = outputter.WriteHost(domain, uniqueMap, w)
 				}
 			}
 		}
